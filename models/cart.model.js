@@ -22,7 +22,7 @@ const DocumentSchema = schema(
         },
         productPrice: {
           type: Number,
-          default:0
+          default: 0
         },
         cGst: {
           type: Number,
@@ -50,7 +50,7 @@ const DocumentSchema = schema(
     },
     totalItemProduct: {
       type: Number,
-      default:0
+      default: 0
     },
     service: [
       {
@@ -103,12 +103,12 @@ const DocumentSchema = schema(
     },
     totalItemService: {
       type: Number,
-      default:0
+      default: 0
     },
-    type:{
-         type:String,
-         enum:["service","product",""],
-         default:""
+    type: {
+      type: String,
+      enum: ["service", "product", ""],
+      default: ""
     }
   },
   { timestamps: true }

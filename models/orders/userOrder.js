@@ -58,29 +58,23 @@ const DocumentSchema = schema(
     },
     serviceBoy: {
       type: String,
-      required: false,
       default: "",
     },
     serviceJobCard: {
       item: {
         type: String,
-        required: true,
       },
       itemName: {
         type: String,
-        required: true,
       },
       partnerType: {
         type: String,
-        required: true,
       },
       images: {
         type: [String],
-        required: true,
       },
       preCheckup: {
         type: String,
-        required: true,
       },
     },
   },
