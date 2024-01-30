@@ -900,7 +900,7 @@ exports.allNewOrders = async (req, res) => {
         acceptOrRejected: "pending",
         rejectedByVendors: { $nin: [loggedInVendorId] }, // Exclude orders rejected by the logged-in vendor
       })
-      .populate("serviceId address");
+      .populate("serviceId address timeslot");
 
     return res.status(200).json({
       success: true,
