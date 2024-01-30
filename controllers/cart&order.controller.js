@@ -229,67 +229,67 @@ exports.emptyCart = async (req, res) => {
   }
 };
 exports.getCart = async (req, res) => {
-  
-    try {
-      // Assuming user ID is available in req.user.id
-      const userId = req.user.id;
-  
-      // Find the user's cart
-      const userCart = await Cart.findOne({ userId }).populate('product.productId');
-  
-      if (!userCart) {
-        return res.status(404).json({ message: "Cart not found for the user" });
-      }
-  
-      // Calculate the subtotal, GST, and total amount based on services and products
-      let subtotal = 0;
-      let totalAmount = 0;
-  
-      // Calculate subtotal for services
-      if (userCart.service && userCart.service.length > 0) {
-        subtotal += userCart.service.reduce((acc, service) => {
-          service.total = service.quantity * service.servicePrice; // Calculate total for each service
-          return acc + service.total;
-        }, 0);
-      }
-  
-      // Calculate subtotal for products
-      let totalProductAmount = 0;
-      if (userCart.product && userCart.product.length > 0) {
-        totalProductAmount = userCart.product.reduce((acc, product) => {
-          product.total = product.quantity * product.productPrice; // Calculate total for each product
-          return acc + product.total;
-        }, 0);
-      }
-  
-      // Calculate GST for products (assuming GST is 18%)
-      const gstPercentage = 18;
-      const gstAmount = (gstPercentage / 100) * totalProductAmount;
-  
-      // Calculate total amount including GST
-      totalAmount = subtotal + gstAmount;
-  
-      // Save the calculated values to the cart
-      userCart.subtotal = subtotal;
-      userCart.gst = gstAmount;
-      userCart.totalAmount = totalAmount;
-      await userCart.save();
-  
-      return res.status(200).json({
-        message: "User cart retrieved successfully",
-        cart: {
-          ...userCart.toObject(),
-          subtotal,
-          gst: gstAmount,
-          totalAmount,
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Server error", error: error.message });
+
+  try {
+    // Assuming user ID is available in req.user.id
+    const userId = req.user.id;
+
+    // Find the user's cart
+    const userCart = await Cart.findOne({ userId }).populate('product.productId');
+
+    if (!userCart) {
+      return res.status(404).json({ message: "Cart not found for the user" });
     }
-  };
-  
+
+    // Calculate the subtotal, GST, and total amount based on services and products
+    let subtotal = 0;
+    let totalAmount = 0;
+
+    // Calculate subtotal for services
+    if (userCart.service && userCart.service.length > 0) {
+      subtotal += userCart.service.reduce((acc, service) => {
+        service.total = service.quantity * service.servicePrice; // Calculate total for each service
+        return acc + service.total;
+      }, 0);
+    }
+
+    // Calculate subtotal for products
+    let totalProductAmount = 0;
+    if (userCart.product && userCart.product.length > 0) {
+      totalProductAmount = userCart.product.reduce((acc, product) => {
+        product.total = product.quantity * product.productPrice; // Calculate total for each product
+        return acc + product.total;
+      }, 0);
+    }
+
+    // Calculate GST for products (assuming GST is 18%)
+    const gstPercentage = 18;
+    const gstAmount = (gstPercentage / 100) * totalProductAmount;
+
+    // Calculate total amount including GST
+    totalAmount = subtotal + gstAmount;
+
+    // Save the calculated values to the cart
+    userCart.subtotal = subtotal;
+    userCart.gst = gstAmount;
+    userCart.totalAmount = totalAmount;
+    await userCart.save();
+
+    return res.status(200).json({
+      message: "User cart retrieved successfully",
+      cart: {
+        ...userCart.toObject(),
+        subtotal,
+        gst: gstAmount,
+        totalAmount,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 exports.checkout = async (req, res) => {
   try {
@@ -516,40 +516,27 @@ exports.cancelReturnOrder = async (req, res, next) => {
 };
 exports.updateStatus = async (req, res, next) => {
   try {
-    console.log("hi");
-    const orderId = req.params.orderId; // Access the orderId property from params
-    const serviceBoy = req.user.id;
+    console.log("Updating status for order...");
 
-    // Validate that orderId is a valid ObjectId
+    const orderId = req.params.orderId;
+    const serviceBoy = req.user.id;
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({ message: 'Invalid orderId' });
     }
-
-    // Find the order by orderId
-    const order = await orderModel.findById(orderId); // Use findById instead of findOne
-    console.log(order);
-
-    // Check if the order exists
+    let order = await orderModel.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-
-    // Check if the order has already been accepted or rejected
-    // if (order.acceptOrRejected === 'accept') {
-    //   return res.status(400).json({ message: 'Order has already been accepted' });
-    // }
-
-    // Update the order with the vendorId and set acceptOrRejected to "accept"
     order.serviceBoy = serviceBoy;
     order.acceptOrRejected = "accept";
-    console.log("hi");
 
-    // Save the updated order
-    await order.save();
+    console.log("Saving updated order...", order);
+    let updatedOrder = await orderModel.findByIdAndUpdate({ _id: orderId }, { $set: { serviceBoy: serviceBoy, acceptOrRejected: "accept" } }, { new: true });
+    console.log("Order updated successfully.");
 
-    return res.status(200).json({ message: "Order accepted successfully", order });
+    return res.status(200).json({ message: "Order accepted successfully", order: updatedOrder }); // Return the updated order
   } catch (error) {
-    console.error(error);
+    console.error("Error updating order:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -899,7 +886,7 @@ exports.allNewOrders = async (req, res) => {
     const pendingOrders = await orderModel
       .find({
         acceptOrRejected: "pending",
-        orderStatus:"unconfirmed",
+        orderStatus: "unconfirmed",
         rejectedByVendors: { $nin: [loggedInVendorId] }, // Exclude orders rejected by the logged-in vendor
       })
       .populate("serviceId").populate("address").populate("timeslot").populate("userId");
@@ -1099,106 +1086,106 @@ exports.deliverStatus = async (req, res, next) => {
 };
 
 exports.increaseServiceQuantity = async (req, res) => {
- 
-    try {
-      // Assuming user ID is available in req.user.id
-      const userId = req.user.id;
-  
-      // Find the user's cart
-      const userCart = await Cart.findOne({ userId });
-  console.log();
-      if (!userCart) {
-        return res.status(404).json({ message: "Cart not found for the user" });
-      }
-  
-      const itemId = req.params.itemId;
-  
-      // Determine whether it's a service or product based on the structure of the cart
-      const isService = userCart.service.some((item) => item.serviceId.toString() === itemId);
-      const isProduct = userCart.product.some((item) => item.productId.toString() === itemId);
-  
-      if (!isService && !isProduct) {
-        return res.status(404).json({ message: "Item not found in the cart" });
-      }
-  
-      // Increase the quantity of the item
-      if (isService) {
-        const serviceIndex = userCart.service.findIndex((item) => item.serviceId.toString() === itemId);
-        userCart.service[serviceIndex].quantity += 1;
-      } else if (isProduct) {
-        const productIndex = userCart.product.findIndex((item) => item.productId.toString() === itemId);
-        userCart.product[productIndex].quantity += 1;
-      }
-  
-      // Save the changes
-      const updatedCart = await userCart.save();
-  
-      return res.status(200).json({
-        message: "Item quantity increased successfully",
-        cart: updatedCart,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Server error", error: error.message });
+
+  try {
+    // Assuming user ID is available in req.user.id
+    const userId = req.user.id;
+
+    // Find the user's cart
+    const userCart = await Cart.findOne({ userId });
+    console.log();
+    if (!userCart) {
+      return res.status(404).json({ message: "Cart not found for the user" });
     }
-  };
-  
+
+    const itemId = req.params.itemId;
+
+    // Determine whether it's a service or product based on the structure of the cart
+    const isService = userCart.service.some((item) => item.serviceId.toString() === itemId);
+    const isProduct = userCart.product.some((item) => item.productId.toString() === itemId);
+
+    if (!isService && !isProduct) {
+      return res.status(404).json({ message: "Item not found in the cart" });
+    }
+
+    // Increase the quantity of the item
+    if (isService) {
+      const serviceIndex = userCart.service.findIndex((item) => item.serviceId.toString() === itemId);
+      userCart.service[serviceIndex].quantity += 1;
+    } else if (isProduct) {
+      const productIndex = userCart.product.findIndex((item) => item.productId.toString() === itemId);
+      userCart.product[productIndex].quantity += 1;
+    }
+
+    // Save the changes
+    const updatedCart = await userCart.save();
+
+    return res.status(200).json({
+      message: "Item quantity increased successfully",
+      cart: updatedCart,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 exports.decrementServiceQuantity = async (req, res) => {
- 
-    try {
-      // Assuming user ID is available in req.user.id
-      const userId = req.user.id;
-  
-      // Find the user's cart
-      const userCart = await Cart.findOne({ userId });
-  
-      if (!userCart) {
-        return res.status(404).json({ message: "Cart not found for the user" });
-      }
-  
-      const itemId = req.params.itemId;
-  
-      // Determine whether it's a service or product based on the structure of the cart
-      const isService = userCart.service.some((item) => item.serviceId.toString() === itemId);
-      const isProduct = userCart.product.some((item) => item.productId.toString() === itemId);
-  
-      if (!isService && !isProduct) {
-        return res.status(404).json({ message: "Item not found in the cart" });
-      }
-  
-      // Decrease the quantity of the item
-      if (isService) {
-        const serviceIndex = userCart.service.findIndex((item) => item.serviceId.toString() === itemId);
-  
-        if (userCart.service[serviceIndex].quantity > 1) {
-          userCart.service[serviceIndex].quantity -= 1;
-        } else {
-          return res.status(400).json({ message: "Quantity cannot be less than 1" });
-        }
-      } else if (isProduct) {
-        const productIndex = userCart.product.findIndex((item) => item.productId.toString() === itemId);
-  
-        if (userCart.product[productIndex].quantity > 1) {
-          userCart.product[productIndex].quantity -= 1;
-        } else {
-          return res.status(400).json({ message: "Quantity cannot be less than 1" });
-        }
-      }
-  
-      // Save the changes
-      const updatedCart = await userCart.save();
-  
-      return res.status(200).json({
-        message: "Item quantity decreased successfully",
-        cart: updatedCart,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Server error", error: error.message });
+
+  try {
+    // Assuming user ID is available in req.user.id
+    const userId = req.user.id;
+
+    // Find the user's cart
+    const userCart = await Cart.findOne({ userId });
+
+    if (!userCart) {
+      return res.status(404).json({ message: "Cart not found for the user" });
     }
-  };
-  
+
+    const itemId = req.params.itemId;
+
+    // Determine whether it's a service or product based on the structure of the cart
+    const isService = userCart.service.some((item) => item.serviceId.toString() === itemId);
+    const isProduct = userCart.product.some((item) => item.productId.toString() === itemId);
+
+    if (!isService && !isProduct) {
+      return res.status(404).json({ message: "Item not found in the cart" });
+    }
+
+    // Decrease the quantity of the item
+    if (isService) {
+      const serviceIndex = userCart.service.findIndex((item) => item.serviceId.toString() === itemId);
+
+      if (userCart.service[serviceIndex].quantity > 1) {
+        userCart.service[serviceIndex].quantity -= 1;
+      } else {
+        return res.status(400).json({ message: "Quantity cannot be less than 1" });
+      }
+    } else if (isProduct) {
+      const productIndex = userCart.product.findIndex((item) => item.productId.toString() === itemId);
+
+      if (userCart.product[productIndex].quantity > 1) {
+        userCart.product[productIndex].quantity -= 1;
+      } else {
+        return res.status(400).json({ message: "Quantity cannot be less than 1" });
+      }
+    }
+
+    // Save the changes
+    const updatedCart = await userCart.save();
+
+    return res.status(200).json({
+      message: "Item quantity decreased successfully",
+      cart: updatedCart,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.jobCard = async (req, res) => {
   try {
     const orderId = req.params.orderId;
