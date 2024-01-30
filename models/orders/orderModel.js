@@ -23,10 +23,10 @@ const DocumentSchema = schema({
     type: schema.Types.ObjectId,
     ref: "Product"
   },
-  serviceBoy: {
+  serviceBoy:{
     type: schema.Types.ObjectId,
     ref: "user",
-
+  
   },
   rejectedByVendors: [
     {
@@ -34,14 +34,14 @@ const DocumentSchema = schema({
       ref: "user", // Replace "user" with the actual model name for vendors
     },
   ],
-  productPrice: {
+   productPrice: {
     type: Number
   },
   quantity: {
     type: Number,
     default: 1
   },
-  cGst: {
+   cGst: {
     type: Number,
   },
   sGst: {
@@ -67,44 +67,44 @@ const DocumentSchema = schema({
     type: String,
   },
 
-
-  vendorIdService: {
-    type: schema.Types.ObjectId,
-    ref: "user",
-  },
-  categoryId: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Category",
-  },
-  subCategoryId: {
-    type: mongoose.Schema.ObjectId,
-    ref: "subCategory",
-  },
-  subsubCategoryId: {
-    type: mongoose.Schema.ObjectId,
-    ref: "subsubcategory",
-  },
-  serviceId: {
-    type: schema.Types.ObjectId,
-    ref: "seviceName",
-  },
-  servicePrice: {
-    type: Number,
-  },
-  cGstService: {
-    type: Number,
-  },
-  sGstService: {
-    type: Number,
-  },
-  quantityService: {
-    type: Number,
-    default: 1,
-  },
-  totalService: {
-    type: Number,
-    default: 0,
-  },
+  
+    vendorIdService: {
+      type: schema.Types.ObjectId,
+      ref: "user",
+    },
+    categoryId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Category",
+    },
+    subCategoryId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "subCategory",
+    },
+    subsubCategoryId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "subsubcategory",
+    },
+    serviceId: {
+      type: schema.Types.ObjectId,
+      ref: "seviceName",
+    },
+    servicePrice: {
+      type: Number,
+    },
+    cGstService: {
+      type: Number,
+    },
+    sGstService: {
+      type: Number,
+    },
+    quantityService: {
+      type: Number,
+      default: 1,
+    },
+    totalService: {
+      type: Number,
+      default: 0,
+    },
   paidAmountService: {
     type: Number,
     default: 0
@@ -173,7 +173,7 @@ const DocumentSchema = schema({
   },
   orderStatus: {
     type: String,
-    enum: ["unconfirmed", "confirmed"],
+    enum: ["unconfirmed", "confirmed","unconfirme"],
     default: "unconfirmed",
   },
   returnStatus: {
@@ -181,15 +181,15 @@ const DocumentSchema = schema({
     enum: ["return", "cancel", ""],
     default: ""
   },
-  //                     serviceBoy:{
-  //   type: schema.Types.ObjectId,
-  //   ref: "user",
-  //   default:""
-  // },
-  // userId: {
-  //   type: schema.Types.ObjectId,
-  //   ref: "user"
-  // },
+    //                     serviceBoy:{
+    //   type: schema.Types.ObjectId,
+    //   ref: "user",
+    //   default:""
+    // },
+    // userId: {
+    //   type: schema.Types.ObjectId,
+    //   ref: "user"
+    // },
   returnOrder: {
     type: schema.Types.ObjectId,
     ref: "cancelReturnOrder",
@@ -214,22 +214,22 @@ const DocumentSchema = schema({
     enum: ["assigned", "out_for_delivery", "delivered", ""],
     default: ""
   },
-  acceptOrRejected: {
-    type: String,
-    enum: ["accept", "reject", "pending"],
-    default: "pending"
+  acceptOrRejected:{
+    type:String,
+    enum:["accept","reject","pending"],
+    default:"pending"
   },
-  startTime: {
-    type: String,
-    default: ""
+  startTime:{
+    type:String,
+    default:""
   },
-  endTime: {
-    type: String,
-    default: ""
+  endTime:{
+    type:String,
+    default:""
   },
-  otp: {
-    type: Number,
-    default: ""
+  otp:{
+    type:Number,
+    default:""
   },
   otpExpiration: {
     type: Date,
@@ -241,15 +241,19 @@ const DocumentSchema = schema({
   serviceJobCard: {
     item: {
       type: String,
+      // required: true,
     },
     itemName: {
       type: String,
+      // required: true,
     },
     partnerType: {
       type: String,
+      // required: true,
     },
     images: {
       type: [String],
+      // required: true,
     },
     preCheckup: [
       {

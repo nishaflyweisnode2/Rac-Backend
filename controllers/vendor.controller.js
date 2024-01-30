@@ -78,7 +78,7 @@ exports.loginWithPhoneVendor = async (req, res) => {
     };
     res
       .status(200)
-      .send({ status: 200, message: "logged in successfully", data: obj });
+      .send({ status: 200, message: "logged in successfully", data: obj,user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
