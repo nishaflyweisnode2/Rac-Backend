@@ -21,7 +21,7 @@ const DocumentSchema = schema({
     ref: "Product"
   },
   serviceBoy: {
-    type: schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "user",
 
   },

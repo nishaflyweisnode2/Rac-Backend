@@ -941,7 +941,7 @@ exports.ongoingJob = async (req, res, next) => {
         serviceBoy: boy,
         acceptOrRejected: "accept",
       })
-      .populate("serviceId");
+      .populate("serviceId").populate("address").populate("timeslot").populate("userId");
 
     if (ongoingOrders.length === 0) {
       return res.status(404).json({
