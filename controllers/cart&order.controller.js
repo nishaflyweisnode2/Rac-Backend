@@ -228,48 +228,44 @@ exports.emptyCart = async (req, res) => {
     throw new Error("An error occurred");
   }
 };
+
 exports.getCart = async (req, res) => {
 
   try {
-    // Assuming user ID is available in req.user.id
     const userId = req.user.id;
 
-    // Find the user's cart
-    const userCart = await Cart.findOne({ userId }).populate('product.productId');
+    const userCart = await Cart.findOne({ userId }).populate('product.productId').populate({
+      path: 'service.serviceId',
+      model: 'seviceName',
+    });
 
     if (!userCart) {
       return res.status(404).json({ message: "Cart not found for the user" });
     }
 
-    // Calculate the subtotal, GST, and total amount based on services and products
     let subtotal = 0;
     let totalAmount = 0;
 
-    // Calculate subtotal for services
     if (userCart.service && userCart.service.length > 0) {
       subtotal += userCart.service.reduce((acc, service) => {
-        service.total = service.quantity * service.servicePrice; // Calculate total for each service
+        service.total = service.quantity * service.servicePrice;
         return acc + service.total;
       }, 0);
     }
 
-    // Calculate subtotal for products
     let totalProductAmount = 0;
     if (userCart.product && userCart.product.length > 0) {
       totalProductAmount = userCart.product.reduce((acc, product) => {
-        product.total = product.quantity * product.productPrice; // Calculate total for each product
+        product.total = product.quantity * product.productPrice;
         return acc + product.total;
       }, 0);
     }
 
-    // Calculate GST for products (assuming GST is 18%)
     const gstPercentage = 18;
     const gstAmount = (gstPercentage / 100) * totalProductAmount;
 
-    // Calculate total amount including GST
     totalAmount = subtotal + gstAmount;
 
-    // Save the calculated values to the cart
     userCart.subtotal = subtotal;
     userCart.gst = gstAmount;
     userCart.totalAmount = totalAmount;
