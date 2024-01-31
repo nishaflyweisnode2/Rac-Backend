@@ -714,6 +714,9 @@ exports.getOrders = async (req, res, next) => {
   try {
     const orders = await orderModel
       .find({ userId: req.user._id })
+      .populate("userId")
+      .populate("address")
+      .populate("timeslot")
       .populate("serviceId");
 
     if (orders.length === 0) {
@@ -803,6 +806,8 @@ exports.getOrderbyId = async (req, res, next) => {
     const orders = await orderModel
       .findById({ _id: req.params.id })
       .populate("userId")
+      .populate("address")
+      .populate("timeslot")
       .populate("serviceId");
     if (!orders) {
       return res
@@ -922,6 +927,7 @@ exports.allNewOrders = async (req, res) => {
 exports.ongoingJob = async (req, res, next) => {
   try {
     const serviceBoy = req.params.vendorId;
+    console.log("serviceBoy", serviceBoy);
     // Check if the vendor exists in the database
     const boy = await User.findById(serviceBoy);
 
