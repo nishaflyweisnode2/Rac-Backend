@@ -246,11 +246,33 @@ const DocumentSchema = schema({
     images: {
       type: [String],
     },
+    capacity: {
+      type: String,
+    },
+    regNo: {
+      type: String,
+    },
+    otherDetails: {
+      type: String,
+    },
     preCheckup: [
       {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PreCheckup",
       },
     ],
+    workDone: {
+      type: String,
+    },
+    EndCheckup: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "EndJob",
+      },
+    ],
+    quantity: {
+      type: Number,
+    },
   },
 }, { timestamps: true })
 module.exports = mongoose.model("Order", DocumentSchema);

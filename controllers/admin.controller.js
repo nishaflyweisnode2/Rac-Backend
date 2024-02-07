@@ -7,6 +7,11 @@ const Category = require("../models/CategoryModel");
 const subCategory = require("../models/subCategoryModel");
 const imagePattern = "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|JPG|JPEG|PNG|GIF)$";
 const multer = require("multer");
+const PreCheckup = require('../models/preCheckupModel');
+const EndJob = require('../models/orders/endJobModel');
+
+
+
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
@@ -327,14 +332,126 @@ exports.getsubofcat = async (req, res) => {
 };
 
 exports.subById = async (req, res) => {
-   
-        try {
-          const categoryId = req.params.categoryId;
-          const subcategories = await subCategory.find({ categoryId }).populate("categoryId");
-      
-          res.status(200).json({ status: 200, data: subcategories });
-        } catch (error) {
-          res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
-        }
-      };
-      
+
+  try {
+    const categoryId = req.params.categoryId;
+    const subcategories = await subCategory.find({ categoryId }).populate("categoryId");
+
+    res.status(200).json({ status: 200, data: subcategories });
+  } catch (error) {
+    res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
+  }
+};
+
+exports.createPreCheckup = async (req, res) => {
+  try {
+    const { name, status } = req.body;
+    const preCheckup = await PreCheckup.create({ name, status });
+    res.status(201).json({ success: true, data: preCheckup });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getAllPreCheckups = async (req, res) => {
+  try {
+    const preCheckups = await PreCheckup.find();
+    res.status(200).json({ success: true, data: preCheckups });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getPreCheckupById = async (req, res) => {
+  try {
+    const preCheckup = await PreCheckup.findById(req.params.id);
+    if (!preCheckup) {
+      return res.status(404).json({ success: false, message: 'Pre-checkup not found' });
+    }
+    res.status(200).json({ success: true, data: preCheckup });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.updatePreCheckup = async (req, res) => {
+  try {
+    const { name, status } = req.body;
+    const preCheckup = await PreCheckup.findByIdAndUpdate(req.params.id, { name, status }, { new: true });
+    if (!preCheckup) {
+      return res.status(404).json({ success: false, message: 'Pre-checkup not found' });
+    }
+    res.status(200).json({ success: true, data: preCheckup });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.deletePreCheckup = async (req, res) => {
+  try {
+    const preCheckup = await PreCheckup.findByIdAndDelete(req.params.id);
+    if (!preCheckup) {
+      return res.status(404).json({ success: false, message: 'Pre-checkup not found' });
+    }
+    res.status(200).json({ success: true, message: 'Pre-checkup deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.createEndJob = async (req, res) => {
+  try {
+    const { name, price, status } = req.body;
+    const preCheckup = await EndJob.create({ name, price, status });
+    res.status(201).json({ success: true, data: preCheckup });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getAllEndJob = async (req, res) => {
+  try {
+    const preCheckups = await EndJob.find();
+    res.status(200).json({ success: true, data: preCheckups });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getEndJobById = async (req, res) => {
+  try {
+    const preCheckup = await EndJob.findById(req.params.id);
+    if (!preCheckup) {
+      return res.status(404).json({ success: false, message: 'End job not found' });
+    }
+    res.status(200).json({ success: true, data: preCheckup });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.updateEndJob = async (req, res) => {
+  try {
+    const { name, price, status } = req.body;
+    const preCheckup = await EndJob.findByIdAndUpdate(req.params.id, { name, price, status }, { new: true });
+    if (!preCheckup) {
+      return res.status(404).json({ success: false, message: 'End job not found' });
+    }
+    res.status(200).json({ success: true, data: preCheckup });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.deleteEndJob = async (req, res) => {
+  try {
+    const preCheckup = await PreCheckup.findByIdAndDelete(req.params.id);
+    if (!preCheckup) {
+      return res.status(404).json({ success: false, message: 'End job not found' });
+    }
+    res.status(200).json({ success: true, message: 'End job deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+

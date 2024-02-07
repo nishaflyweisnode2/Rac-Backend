@@ -6,6 +6,8 @@ const User = require("../models/user.model");
 const Category = require("../models/CategoryModel");
 const banner = require("../models/banner");
 const mongoose = require("mongoose");
+const PreCheckup = require('../models/preCheckupModel');
+
 // const vendorDetails = require("../models/vendorDetails");
 // const Product = require("../models/product.model");
 
@@ -1205,25 +1207,40 @@ exports.jobCard = async (req, res) => {
 
       let imagePaths = [];
 
-      // Check if req.files is an array (multer.array())
       if (Array.isArray(req.files)) {
-        // Iterate through uploaded files
         for (let i = 0; i < req.files.length; i++) {
           imagePaths.push(req.files[i] ? req.files[i].path : "");
         }
       } else {
-        // For single file uploads (multer.single())
         imagePaths.push(req.files ? req.files.path : "");
       }
 
-      const { item, itemName, partnerType, preCheckup } = req.body;
+      const { item, itemName, partnerType, capacity, regNo, otherDetails, workDone, preCheckup } = req.body;
+
+      if (preCheckup && preCheckup.length > 0) {
+        const invalidPreCheckups = await PreCheckup.find({
+          _id: preCheckup,
+        });
+        console.log("invalidPreCheckups", invalidPreCheckups);
+        if (!invalidPreCheckups) {
+          return res.status(404).json({
+            success: false,
+            message: "Invalid Pre-checkup IDs",
+            invalidPreCheckups: invalidPreCheckups.map(pc => pc._id),
+          });
+        }
+      }
 
       order.serviceJobCard = {
         item,
         itemName,
         partnerType,
-        images: imagePaths, // Use a different variable name to avoid conflict
+        images: imagePaths,
         preCheckup,
+        capacity,
+        regNo,
+        otherDetails,
+        workDone,
       };
 
       const updatedOrder = await order.save();
@@ -1240,6 +1257,50 @@ exports.jobCard = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+
+exports.endJobCard = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found", orderId });
+    }
+
+    const { quantity, EndCheckup, } = req.body;
+
+      const invalidPreCheckups = await EndJob.find({
+        _id: EndCheckup,
+      });
+      console.log("invalidPreCheckups", invalidPreCheckups);
+      if (!invalidPreCheckups) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid Pre-checkup IDs",
+          invalidPreCheckups: invalidPreCheckups.map(pc => pc._id),
+        });
+      }
+
+    order.serviceJobCard = {
+      quantity,
+      EndCheckup,
+    };
+
+    const updatedOrder = await order.save();
+
+    res.status(201).json({
+      message: "Service Job Card added successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
 exports.navigate = async (req, res) => {
   try {
     const { userAddress, servicePersonAddress, apiKey } = req.body;
