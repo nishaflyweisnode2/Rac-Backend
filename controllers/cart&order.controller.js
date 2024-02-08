@@ -26,6 +26,9 @@ const Cart = require("../models/cart.model");
 const orderModel = require("../models/orders/orderModel");
 const userOrder = require("../models/orders/userOrder");
 const cancelReturnOrder = require("../models/orders/cancelReturnOrder");
+const EndJob = require('../models/orders/endJobModel');
+
+
 // const cartModel = require("../models/cart.model");
 const seviceNameModel = require("../models/service");
 const imagePattern = "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|JPG|JPEG|PNG|GIF)$";
@@ -45,6 +48,9 @@ const storage = new CloudinaryStorage({
   },
 });
 const upload = multer({ storage: storage });
+
+
+
 exports.addToCart = async (req, res) => {
   try {
     console.log("hi");
@@ -175,6 +181,7 @@ exports.addToCart = async (req, res) => {
       .send({ status: 500, message: "Server error" + error.message });
   }
 };
+
 exports.deletesingleProductAndService = async (req, res) => {
   try {
     let cart = [];
@@ -195,6 +202,7 @@ exports.deletesingleProductAndService = async (req, res) => {
     throw new Error("An error occurred");
   }
 };
+
 exports.emptyCart = async (req, res) => {
   try {
     console.log("hi");
@@ -287,7 +295,6 @@ exports.getCart = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 exports.checkout = async (req, res) => {
   try {
@@ -429,7 +436,6 @@ exports.placeOrder = async (req, res) => {
 
             console.log(updatedOrder);
 
-            // Check if the order has a serviceId and it's an array
             if (
               updatedOrder &&
               updatedOrder.serviceId &&
@@ -442,7 +448,6 @@ exports.placeOrder = async (req, res) => {
                   { new: true }
                 );
 
-                // Log the updated service
                 console.log(updatedService);
               }
             }
@@ -1261,26 +1266,21 @@ exports.jobCard = async (req, res) => {
 exports.endJobCard = async (req, res) => {
   try {
     const orderId = req.params.orderId;
+    const { quantity, EndCheckup } = req.body;
 
     const order = await orderModel.findById(orderId);
-
     if (!order) {
       return res.status(404).json({ message: "Order not found", orderId });
     }
 
-    const { quantity, EndCheckup, } = req.body;
+    const endJob = await EndJob.findById(EndCheckup);
+    if (!endJob) {
+      return res.status(404).json({ message: "End Job not found", EndCheckup });
+    }
 
-      const invalidPreCheckups = await EndJob.find({
-        _id: EndCheckup,
-      });
-      console.log("invalidPreCheckups", invalidPreCheckups);
-      if (!invalidPreCheckups) {
-        return res.status(404).json({
-          success: false,
-          message: "Invalid Pre-checkup IDs",
-          invalidPreCheckups: invalidPreCheckups.map(pc => pc._id),
-        });
-      }
+    const endJobTotalPrice = endJob.price * quantity;
+
+    order.total += endJobTotalPrice;
 
     order.serviceJobCard = {
       quantity,
@@ -1295,11 +1295,10 @@ exports.endJobCard = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 
 exports.navigate = async (req, res) => {
   try {

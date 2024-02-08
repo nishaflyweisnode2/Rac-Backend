@@ -69,6 +69,7 @@ router.put(
   auth.decrementServiceQuantity
 );
 router.put("/job/card/:orderId", auth.jobCard);
+router.put("/end/job/card/:orderId", auth.endJobCard);
 router.get("/navigate", auth.navigate);
 
 module.exports = router;

@@ -189,6 +189,10 @@ const DocumentSchema = schema({
     type: schema.Types.ObjectId,
     ref: "cancelReturnOrder",
   },
+  paymentType: {
+    type: String,
+    enum: ["Online", "Cash"],
+  },
   paymentStatus: {
     type: String,
     enum: ["pending", "paid", "failed"],
