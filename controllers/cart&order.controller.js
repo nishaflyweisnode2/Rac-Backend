@@ -611,7 +611,7 @@ exports.updateStartTime = async (req, res, next) => {
       otp: update.otp,
       startTime: req.body.startTime,
     };
-    res.status(200).send({ status: 200, message: "OTP", data: obj });
+    return res.status(200).send({ status: 200, message: "OTP", data: obj });
     if (update) {
       res.status(200).send({
         status: 200,
@@ -621,9 +621,7 @@ exports.updateStartTime = async (req, res, next) => {
     }
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send({ status: 500, message: "Server error" + error.message });
+    return res.status(500).send({ status: 500, message: "Server error" + error.message });
   }
 };
 exports.updateEndTime = async (req, res, next) => {
@@ -1220,7 +1218,7 @@ exports.jobCard = async (req, res) => {
         imagePaths.push(req.files ? req.files.path : "");
       }
 
-      const { item, itemName, partnerType, capacity, regNo, otherDetails, workDone, preCheckup } = req.body;
+      const {otp, item, itemName, partnerType, capacity, regNo, otherDetails, workDone, preCheckup } = req.body;
 
       if (preCheckup && preCheckup.length > 0) {
         const invalidPreCheckups = await PreCheckup.find({
@@ -1237,6 +1235,7 @@ exports.jobCard = async (req, res) => {
       }
 
       order.serviceJobCard = {
+        otp,
         item,
         itemName,
         partnerType,
