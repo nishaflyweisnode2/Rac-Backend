@@ -584,10 +584,9 @@ exports.updateStartTime = async (req, res, next) => {
   try {
     const orders = await orderModel.findOne({ _id: req.params.id });
     if (!orders) {
-      return res
-        .status(404)
-        .json({ status: 404, message: "Orders not found", data: {} });
+      return res.status(404).json({ status: 404, message: "Orders not found", data: {} });
     }
+
     const otp = newOTP.generate(4, {
       alphabets: false,
       upperCase: false,
@@ -596,7 +595,7 @@ exports.updateStartTime = async (req, res, next) => {
     const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
     const accountVerification = false;
 
-    let update = await orderModel.findByIdAndUpdate(
+    const update = await orderModel.findByIdAndUpdate(
       { _id: req.params.id },
       {
         startTime: req.body.startTime,
@@ -606,32 +605,30 @@ exports.updateStartTime = async (req, res, next) => {
       },
       { new: true }
     );
-    let obj = {
+
+    if (!update) {
+      return res.status(500).send({ status: 500, message: "Failed to update order" });
+    }
+
+    const responseObj = {
       id: update._id,
       otp: update.otp,
       startTime: req.body.startTime,
     };
-    return res.status(200).send({ status: 200, message: "OTP", data: obj });
-    if (update) {
-      res.status(200).send({
-        status: 200,
-        message: "otp send successfully.",
-        data: update,
-      });
-    }
+
+    return res.status(200).send({ status: 200, message: "OTP sent successfully.", data: responseObj });
   } catch (error) {
     console.error(error);
-    return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    return res.status(500).send({ status: 500, message: "Server error: " + error.message });
   }
 };
 exports.updateEndTime = async (req, res, next) => {
   try {
     const orders = await orderModel.findOne({ _id: req.params.id });
     if (!orders) {
-      return res
-        .status(404)
-        .json({ status: 404, message: "Orders not found", data: {} });
+      return res.status(404).json({ status: 404, message: "Orders not found", data: {} });
     }
+
     const otp = newOTP.generate(4, {
       alphabets: false,
       upperCase: false,
@@ -640,7 +637,7 @@ exports.updateEndTime = async (req, res, next) => {
     const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
     const accountVerification = false;
 
-    let update = await orderModel.findByIdAndUpdate(
+    const update = await orderModel.findByIdAndUpdate(
       { _id: req.params.id },
       {
         endTime: req.body.endTime,
@@ -650,17 +647,21 @@ exports.updateEndTime = async (req, res, next) => {
       },
       { new: true }
     );
-    let obj = {
+
+    if (!update) {
+      return res.status(500).send({ status: 500, message: "Failed to update order" });
+    }
+
+    const responseData = {
       id: update._id,
       otp: update.otp,
       endTime: req.body.endTime,
     };
-    return res.status(200).send({ status: 200, message: "OTP", data: obj });
+
+    return res.status(200).send({ status: 200, message: "Updated endTime and OTP", data: responseData });
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .send({ status: 500, message: "Server error" + error.message });
+    return res.status(500).send({ status: 500, message: "Server error: " + error.message });
   }
 };
 exports.verifyOtpOfPartner = async (req, res) => {
@@ -1218,7 +1219,7 @@ exports.jobCard = async (req, res) => {
         imagePaths.push(req.files ? req.files.path : "");
       }
 
-      const {otp, item, itemName, partnerType, capacity, regNo, otherDetails, workDone, preCheckup } = req.body;
+      const { otp, item, itemName, partnerType, capacity, regNo, otherDetails, workDone, preCheckup } = req.body;
 
       if (preCheckup && preCheckup.length > 0) {
         const invalidPreCheckups = await PreCheckup.find({
