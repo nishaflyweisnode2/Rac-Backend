@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authConfig = require("../configs/auth.config");
-var newOTP = require("otp-generators");
+const newOTP = require("otp-generators");
 const User = require("../models/user.model");
 const Category = require("../models/CategoryModel");
 const banner = require("../models/banner");
@@ -587,11 +587,7 @@ exports.updateStartTime = async (req, res, next) => {
       return res.status(404).json({ status: 404, message: "Orders not found", data: {} });
     }
 
-    const otp = newOTP.generate(4, {
-      alphabets: false,
-      upperCase: false,
-      specialChar: false,
-    });
+    let otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false });
     const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
     const accountVerification = false;
 
@@ -629,11 +625,7 @@ exports.updateEndTime = async (req, res, next) => {
       return res.status(404).json({ status: 404, message: "Orders not found", data: {} });
     }
 
-    const otp = newOTP.generate(4, {
-      alphabets: false,
-      upperCase: false,
-      specialChar: false,
-    });
+    let otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false });
     const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
     const accountVerification = false;
 
