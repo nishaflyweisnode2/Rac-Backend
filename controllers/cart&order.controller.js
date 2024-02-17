@@ -661,35 +661,30 @@ exports.verifyOtpOfPartner = async (req, res) => {
     const { otp } = req.body;
     const user = await orderModel.findById(req.params.id);
     if (!user) {
-      return res.status(404).send({ message: "user not found" });
+      return res.status(404).send({ message: "User not found" });
     }
-    if (user.otp !== otp || user.otpExpiration < Date.now()) {
+    if (user.otp !== otp && user.otpExpiration > Date.now()) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
     const updated = await orderModel.findByIdAndUpdate(
-      { _id: user._id },
+      user._id,
       { accountVerification: true },
       { new: true }
     );
-    // const accessToken = jwt.sign({ id: user._id }, authConfig.secret, {
-    //   expiresIn: authConfig.accessTokenTime,
-    // });
+
     let obj = {
       id: updated._id,
       otp: updated.otp,
-      // phone: updated.phone,
-      // accessToken: accessToken,
     };
     return res
       .status(200)
-      .send({ status: 200, message: "logged in successfully", data: obj });
+      .send({ message: "Logged in successfully", data: obj });
   } catch (err) {
-    console.log(err.message);
-    return res
-      .status(500)
-      .send({ error: "internal server error" + err.message });
+    console.error(err);
+    return res.status(500).send({ error: "Internal server error" });
   }
 };
+
 exports.getAllOrders = async (req, res, next) => {
   try {
     const orders = await userOrder
