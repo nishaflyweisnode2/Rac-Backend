@@ -663,7 +663,7 @@ exports.verifyOtpOfPartner = async (req, res) => {
     if (!user) {
       return res.status(404).send({ message: "User not found" });
     }
-    if (user.otp !== otp && user.otpExpiration > Date.now()) {
+    if (user.otp !== otp /*&& user.otpExpiration > Date.now()*/) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
     const updated = await orderModel.findByIdAndUpdate(
