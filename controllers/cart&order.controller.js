@@ -676,9 +676,7 @@ exports.verifyOtpOfPartner = async (req, res) => {
       id: updated._id,
       otp: updated.otp,
     };
-    return res
-      .status(200)
-      .send({ message: "Logged in successfully", data: obj });
+    return res.status(200).send({ status: 200, message: "Logged in successfully", data: obj });
   } catch (err) {
     console.error(err);
     return res.status(500).send({ error: "Internal server error" });
