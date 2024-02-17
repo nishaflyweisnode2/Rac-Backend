@@ -42,8 +42,8 @@ router.get("/subById/:categoryId", auth.subById);
 
 
 router.post('/precheckups', [authJwt.verifyToken], auth.createPreCheckup);
-router.get('/precheckups', [authJwt.verifyToken], auth.getAllPreCheckups);
-router.get('/precheckups/:id', [authJwt.verifyToken], auth.getPreCheckupById);
+router.get('/precheckups', /*[authJwt.verifyToken],*/ auth.getAllPreCheckups);
+router.get('/precheckups/:id', /*[authJwt.verifyToken],*/ auth.getPreCheckupById);
 router.put('/precheckups/:id', [authJwt.verifyToken], auth.updatePreCheckup);
 router.delete('/precheckups/:id', [authJwt.verifyToken], auth.deletePreCheckup);
 
