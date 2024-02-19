@@ -1266,7 +1266,10 @@ exports.endJobCard = async (req, res) => {
     let previousEndJobTotalPrice = 0;
     if (order.serviceJobCard && order.serviceJobCard.EndCheckup) {
       const previousEndJob = await EndJob.findById(order.serviceJobCard.EndCheckup);
-      previousEndJobTotalPrice = previousEndJob.price * order.serviceJobCard.quantity;
+      console.log("previousEndJob", previousEndJob);
+      if (previousEndJob) {
+        previousEndJobTotalPrice = previousEndJob.price * order.serviceJobCard.quantity;
+      }
     }
 
     const endJobTotalPrice = endJob.price * quantity;
