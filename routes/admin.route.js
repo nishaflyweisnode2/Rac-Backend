@@ -50,8 +50,8 @@ router.delete('/precheckups/:id', [authJwt.verifyToken], auth.deletePreCheckup);
 
 
 router.post('/endJob', [authJwt.verifyToken], auth.createEndJob);
-router.get('/endJob', [authJwt.verifyToken], auth.getAllEndJob);
-router.get('/endJob/:id', [authJwt.verifyToken], auth.getEndJobById);
+router.get('/endJob', /*[authJwt.verifyToken],*/ auth.getAllEndJob);
+router.get('/endJob/:id', /*[authJwt.verifyToken],*/ auth.getEndJobById);
 router.put('/endJob/:id', [authJwt.verifyToken], auth.updateEndJob);
 router.delete('/endJob/:id', [authJwt.verifyToken], auth.deleteEndJob);
 
