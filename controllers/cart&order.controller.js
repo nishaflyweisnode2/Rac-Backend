@@ -1263,15 +1263,20 @@ exports.endJobCard = async (req, res) => {
       return res.status(404).json({ message: "End Job not found", EndCheckup });
     }
 
+    let previousEndJobTotalPrice = 0;
+    if (order.serviceJobCard && order.serviceJobCard.EndCheckup) {
+      const previousEndJob = await EndJob.findById(order.serviceJobCard.EndCheckup);
+      previousEndJobTotalPrice = previousEndJob.price * order.serviceJobCard.quantity;
+    }
+
     const endJobTotalPrice = endJob.price * quantity;
 
-    order.total += endJobTotalPrice;
+    order.total = order.total - previousEndJobTotalPrice + endJobTotalPrice;
 
     order.serviceJobCard = {
       quantity,
       EndCheckup,
     };
-
     const updatedOrder = await order.save();
 
     res.status(201).json({
