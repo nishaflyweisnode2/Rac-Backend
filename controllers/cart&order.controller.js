@@ -1251,35 +1251,31 @@ exports.jobCard = async (req, res) => {
 exports.endJobCard = async (req, res) => {
   try {
     const orderId = req.params.orderId;
-    const { quantity, EndCheckup } = req.body;
+    const { serviceJobCard } = req.body;
 
     const order = await orderModel.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found", orderId });
     }
 
-    const endJob = await EndJob.findById(EndCheckup);
-    if (!endJob) {
-      return res.status(404).json({ message: "End Job not found", EndCheckup });
-    }
+    let totalPrice = 0;
+    if (serviceJobCard && serviceJobCard.EndCheckup && serviceJobCard.EndCheckup.length > 0) {
+      for (const endCheckup of serviceJobCard.EndCheckup) {
+        const endJob = await EndJob.findById(endCheckup);
+        if (!endJob) {
+          return res.status(404).json({ message: "End Job not found", endCheckup });
+        }
 
-    let previousEndJobTotalPrice = 0;
-    if (order.serviceJobCard && order.serviceJobCard.EndCheckup) {
-      const previousEndJob = await EndJob.findById(order.serviceJobCard.EndCheckup);
-      console.log("previousEndJob", previousEndJob);
-      if (previousEndJob) {
-        previousEndJobTotalPrice = previousEndJob.price * order.serviceJobCard.quantity;
+        const quantity = serviceJobCard.quantity || 1;
+        totalPrice += endJob.price * quantity;
       }
     }
 
-    const endJobTotalPrice = endJob.price * quantity;
+    order.total = totalPrice;
+    order.paidAmount = totalPrice;
 
-    order.total = order.total - previousEndJobTotalPrice + endJobTotalPrice;
+    order.serviceJobCard = serviceJobCard;
 
-    order.serviceJobCard = {
-      quantity,
-      EndCheckup,
-    };
     const updatedOrder = await order.save();
 
     res.status(201).json({
@@ -1292,6 +1288,35 @@ exports.endJobCard = async (req, res) => {
   }
 };
 
+
+exports.addNewService = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const { serviceName, price } = req.body;
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found", orderId });
+    }
+
+    order.paidAmount = order.paidAmount + price;
+
+    order.newService = {
+      serviceName: serviceName,
+      price: price
+    };
+
+    const updatedOrder = await order.save();
+
+    res.status(201).json({
+      message: "Service Job Card added successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
 
 exports.navigate = async (req, res) => {
   try {

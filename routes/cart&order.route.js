@@ -70,6 +70,7 @@ router.put(
 );
 router.put("/job/card/:orderId", auth.jobCard);
 router.put("/end/job/card/:orderId", auth.endJobCard);
+router.put("/end/job/card/newService/:orderId", auth.addNewService);
 router.get("/navigate", auth.navigate);
 
 module.exports = router;

@@ -28,7 +28,7 @@ const DocumentSchema = schema({
   rejectedByVendors: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user", // Replace "user" with the actual model name for vendors
+      ref: "user",
     },
   ],
   productPrice: {
@@ -176,15 +176,6 @@ const DocumentSchema = schema({
     enum: ["return", "cancel", ""],
     default: ""
   },
-  //                     serviceBoy:{
-  //   type: schema.Types.ObjectId,
-  //   ref: "user",
-  //   default:""
-  // },
-  // userId: {
-  //   type: schema.Types.ObjectId,
-  //   ref: "user"
-  // },
   returnOrder: {
     type: schema.Types.ObjectId,
     ref: "cancelReturnOrder",
@@ -277,6 +268,15 @@ const DocumentSchema = schema({
     quantity: {
       type: Number,
     },
+  },
+  newService: {
+    serviceName: {
+      type: String,
+    },
+    price: {
+      type: Number,
+      default: 0
+    }
   },
 }, { timestamps: true })
 module.exports = mongoose.model("Order", DocumentSchema);
