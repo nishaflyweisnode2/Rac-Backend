@@ -28,6 +28,15 @@ var userSchema = mongoose.Schema(
     lastName: {
       type: String,
     },
+    fatherName: {
+      type: String,
+    },
+    dateOfBirth: {
+      type: String,
+    },
+    matrialStatus: {
+      type: String,
+    },
     language: {
       type: String,
     },
@@ -66,6 +75,10 @@ var userSchema = mongoose.Schema(
       type: Number,
     },
     address: {
+      type: String,
+      default: "",
+    },
+    address1: {
       type: String,
       default: "",
     },
@@ -145,6 +158,10 @@ var userSchema = mongoose.Schema(
     },
     //////////////////////////////////////////
     BankName: {
+      type: String,
+      default: "",
+    },
+    holderName: {
       type: String,
       default: "",
     },

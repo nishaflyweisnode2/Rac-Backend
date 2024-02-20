@@ -1355,3 +1355,53 @@ exports.navigate = async (req, res) => {
     });
   }
 };
+
+
+exports.makePayment = async (req, res) => {
+  try {
+    const { paymentType } = req.body;
+    const { orderId } = req.params;
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    if (!["Online", "Cash"].includes(paymentType)) {
+      return res.status(400).json({ success: false, error: 'Invalid payment type' });
+    }
+
+    order.paymentType = paymentType;
+    await order.save();
+
+    return res.status(200).json({ success: true, message: 'Payment successful', data: order });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: 'Server Error' });
+  }
+};
+
+
+exports.updatePaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const { orderId } = req.params;
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    if (!["pending", "paid", "failed"].includes(paymentStatus)) {
+      return res.status(400).json({ success: false, error: 'Invalid payment status' });
+    }
+
+    order.paymentStatus = paymentStatus;
+    await order.save();
+
+    return res.status(200).json({ success: true, message: 'Payment status updated', data: order });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: 'Server Error' });
+  }
+};

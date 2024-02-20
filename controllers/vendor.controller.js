@@ -78,7 +78,7 @@ exports.loginWithPhoneVendor = async (req, res) => {
     };
     res
       .status(200)
-      .send({ status: 200, message: "logged in successfully", data: obj,user });
+      .send({ status: 200, message: "logged in successfully", data: obj, user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -245,6 +245,14 @@ exports.updateFileAndDocumentVendor = async (req, res) => {
       { _id: req.params.id },
       {
         $set: {
+          fullName: req.body.fullName,
+          email: req.body.email,
+          phone: req.body.phone,
+          fatherName: req.body.fatherName,
+          dateOfBirth: req.body.dateOfBirth,
+          matrialStatus: req.body.matrialStatus,
+          address1: req.body.address1,
+          address: req.body.address,
           frontSide: req.body.frontSide,
           backSide: req.body.backSide,
           uploadSelfie: req.body.uploadSelfie,
@@ -284,8 +292,8 @@ exports.updateFileAndDocumentVendor = async (req, res) => {
 exports.addHelpers = async (req, res) => {
   try {
     const vendorId = req.params.id;
-    const { name, aadharNumber,mobileNumber } = req.body;
-    
+    const { name, aadharNumber, mobileNumber } = req.body;
+
     if (req.files && req.files["frontImage"] && req.files["backImage"]) {
       let front = req.files["frontImage"];
       let back = req.files["backImage"];
@@ -299,14 +307,14 @@ exports.addHelpers = async (req, res) => {
       vendor: vendorId, // Assuming you have a vendor ID associated with the helper
       name: name,
       aadharNumber: aadharNumber,
-      mobileNumber:mobileNumber,
+      mobileNumber: mobileNumber,
       frontSide: req.body.frontSide,
       backSide: req.body.backSide,
     });
 
     // Save the helper to the database
     await newHelper.save();
-    
+
     res.json({ message: 'Helper added successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
@@ -314,7 +322,7 @@ exports.addHelpers = async (req, res) => {
 };
 
 
-  
+
 
 exports.getHelpers = async (req, res) => {
   try {
@@ -437,7 +445,7 @@ async function calculateEarnings(vendorId, startDate) {
     vendor: vendorId,
     orderDate: { $gte: startDate },
   });
-  
+
   const totalEarnings = orders.reduce((total, order) => total + order.totalAmount, 0);
 
   return totalEarnings;
