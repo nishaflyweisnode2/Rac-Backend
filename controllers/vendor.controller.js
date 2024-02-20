@@ -287,6 +287,31 @@ exports.updateFileAndDocumentVendor = async (req, res) => {
   }
 };
 
+exports.uploadProfilePic = async (req, res) => {
+  try {
+    const findUser = await User.findById({ _id: req.user._id });
+    if (findUser) {
+      let fileUrl;
+      if (req.file) {
+        fileUrl = req.file ? req.file.path : "";
+      }
+      const user = await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { $set: { uploadSelfie: fileUrl || findUser.uploadSelfie } },
+        { new: true }
+      );
+      console.log(user);
+      return res
+        .status(200)
+        .json({ msg: "profile updated successfully", user: user });
+    }
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .send({ status: 500, message: "Server error" + error.message });
+  }
+};
 
 
 exports.addHelpers = async (req, res) => {
