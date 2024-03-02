@@ -26,6 +26,7 @@ router.post("/Category/addCategory", auth.createCategory);
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
 router.put("/update", [authJwt.verifyToken], auth.update);
+router.get("/alluser", [authJwt.verifyToken], auth.getAllUser);
 
 
 
@@ -54,5 +55,9 @@ router.get('/endJob', /*[authJwt.verifyToken],*/ auth.getAllEndJob);
 router.get('/endJob/:id', /*[authJwt.verifyToken],*/ auth.getEndJobById);
 router.put('/endJob/:id', [authJwt.verifyToken], auth.updateEndJob);
 router.delete('/endJob/:id', [authJwt.verifyToken], auth.deleteEndJob);
+
+
+//vendor
+router.get("/getAllVendor", [authJwt.verifyToken], auth.getAllVendor);
 
 module.exports = router;

@@ -455,3 +455,38 @@ exports.deleteEndJob = async (req, res) => {
   }
 };
 
+exports.getAllVendor = async (req, res) => {
+  try {
+    const data = await User.find().populate("subscription");
+    if (data) {
+      return res
+        .status(200)
+        .json({ status: 200, message: "get Profile", data: data });
+    } else {
+      return res
+        .status(404)
+        .json({ status: 404, message: "No data found", data: {} });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(501).send({ status: 501, message: "server error.", data: {} });
+  }
+};
+
+exports.getAllUser = async (req, res) => {
+  try {
+    const data = await User.find({});
+    if (data) {
+      return res
+        .status(200)
+        .json({ status: 200, message: "get Profile", data: data });
+    } else {
+      return res
+        .status(404)
+        .json({ status: 404, message: "No data found", data: {} });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(501).send({ status: 501, message: "server error.", data: {} });
+  }
+};
