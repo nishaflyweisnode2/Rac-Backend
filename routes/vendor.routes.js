@@ -46,6 +46,9 @@ router.put("/update/area/:vendorId", auth.updateAreaAndDistance);
 
 router.get("/filter/:vendorId", auth.filterTotal);
 
+router.get('/notifications/user', [authJwt.vendorverifyToken], auth.getNotificationsForUser);
+router.put('/notifications/:notificationId', [authJwt.vendorverifyToken], auth.markNotificationAsRead);
+
 
 module.exports = router;
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const notificationController = require('../controllers/notifcation');
+const auth = require('../controllers/notifcation');
+const { authJwt } = require("../middlewares");
 
 
 const multer = require("multer");
@@ -13,19 +14,8 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 var cpUpload = upload.fields([{ name: 'Image', maxCount: 1 }]);
 
-// Route to get all notifications
-router.get('/', notificationController.getAllNotifications);
-
-// Route to get a single notification by ID
-router.get('/:id', notificationController.getNotificationById);
-
-// Route to create a new notification
-router.post('/',cpUpload, notificationController.createNotification);
-
-// Route to update an existing notification by ID
-router.put('/:id', cpUpload,notificationController.updateNotificationById);
-
-// Route to delete a notification by ID
-router.delete('/:id', notificationController.deleteNotificationById);
+router.post('/notifications', [authJwt.verifyToken], auth.createNotification);
+router.put('/notifications/:notificationId', [authJwt.verifyToken], auth.markNotificationAsRead);
+router.get('/notifications/user', [authJwt.verifyToken], auth.getNotificationsForUser);
 
 module.exports = router;

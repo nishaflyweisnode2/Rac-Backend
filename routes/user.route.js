@@ -18,7 +18,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "images/image",
-    allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls","pdf","PDF"],
+    allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF"],
   },
 });
 
@@ -31,8 +31,11 @@ router.post("/resendOtp/:id", auth.resendOTP);
 router.get("/getProfile", [authJwt.verifyToken], auth.getProfile);
 router.put("/updateLocation", [authJwt.verifyToken], auth.updateLocation);
 router.put("/editProfile", [authJwt.verifyToken], auth.editProfile);
-router.put("/uploadSelfie", upload.single('file'),[authJwt.verifyToken], auth.uploadSelfie)
+router.put("/uploadSelfie", upload.single('file'), [authJwt.verifyToken], auth.uploadSelfie)
 
 router.get("/near/shop", auth.nearbyShop)
+
+router.get('/notifications/user', [authJwt.verifyToken], auth.getNotificationsForUser);
+router.put('/notifications/:notificationId', [authJwt.verifyToken], auth.markNotificationAsRead);
 
 module.exports = router;

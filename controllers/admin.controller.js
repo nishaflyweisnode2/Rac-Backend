@@ -1,6 +1,6 @@
+const authConfig = require("../configs/auth.config");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const authConfig = require("../configs/auth.config");
 var newOTP = require("otp-generators");
 const User = require("../models/user.model");
 const Category = require("../models/CategoryModel");
@@ -9,6 +9,10 @@ const imagePattern = "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|JPG|JPEG|PNG|GIF)$";
 const multer = require("multer");
 const PreCheckup = require('../models/preCheckupModel');
 const EndJob = require('../models/orders/endJobModel');
+const TodoItem = require('../models/todolistModel');
+const Notification = require('../models/notifcation');
+const nodemailer = require('nodemailer');
+const schedule = require('node-schedule');
 
 
 
@@ -67,6 +71,8 @@ exports.signin = async (req, res) => {
     const accessToken = jwt.sign({ id: user._id }, authConfig.secret, {
       expiresIn: authConfig.accessTokenTime,
     });
+    console.log("ac", authConfig.secret,);
+    console.log("ac", accessToken);
     res.status(201).send({ data: user, accessToken: accessToken });
   } catch (error) {
     console.error(error);
@@ -490,3 +496,215 @@ exports.getAllUser = async (req, res) => {
     res.status(501).send({ status: 501, message: "server error.", data: {} });
   }
 };
+
+exports.createTodoItem = async (req, res) => {
+  try {
+    const admin = await User.findById(req.user._id);
+    if (!admin) {
+      return res.status(404).json({ status: 404, message: "Admin not found" });
+    }
+    const { title, description, completed, reminderDate } = req.body;
+    const todoItem = new TodoItem({ userId: admin._id, title, description, completed, reminderDate });
+    await todoItem.save();
+    res.status(201).json({ message: 'Todo item created successfully', data: todoItem });
+  } catch (error) {
+    console.error('Error creating todo item:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getAllTodoItems = async (req, res) => {
+  try {
+    const todoItems = await TodoItem.find();
+    res.status(200).json({ data: todoItems });
+  } catch (error) {
+    console.error('Error getting todo items:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getTodoItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const todoItem = await TodoItem.findById(id);
+    if (!todoItem) {
+      return res.status(404).json({ message: 'Todo item not found' });
+    }
+    res.status(200).json({ data: todoItem });
+  } catch (error) {
+    console.error('Error getting todo item by ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.updateTodoItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, completed, reminderDate, reminderSet } = req.body;
+    const updatedTodoItem = await TodoItem.findByIdAndUpdate(id, { title, description, completed, reminderDate, reminderSet }, { new: true });
+    if (!updatedTodoItem) {
+      return res.status(404).json({ message: 'Todo item not found' });
+    }
+    res.status(200).json({ message: 'Todo item updated successfully', data: updatedTodoItem });
+  } catch (error) {
+    console.error('Error updating todo item by ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.deleteTodoItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedTodoItem = await TodoItem.findByIdAndDelete(id);
+    if (!deletedTodoItem) {
+      return res.status(404).json({ message: 'Todo item not found' });
+    }
+    res.status(200).json({ message: 'Todo item deleted successfully', data: deletedTodoItem });
+  } catch (error) {
+    console.error('Error deleting todo item by ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+exports.createNotification = async (req, res) => {
+  try {
+    const admin = await User.findById(req.user._id);
+    if (!admin) {
+      return res.status(404).json({ status: 404, message: "Admin not found" });
+    }
+
+    const createNotification = async (userId) => {
+      const notificationData = {
+        userId,
+        title: req.body.title,
+        content: req.body.content,
+      };
+      return await Notification.create(notificationData);
+    };
+
+    if (req.body.total === "ALL") {
+      const userData = await User.find({ userType: req.body.sendTo });
+      if (userData.length === 0) {
+        return res.status(404).json({ status: 404, message: "Users not found" });
+      }
+
+      for (const user of userData) {
+        await createNotification(user._id);
+      }
+
+      await createNotification(admin._id);
+
+      return res.status(200).json({ status: 200, message: "Notifications sent successfully to all users." });
+    }
+
+    if (req.body.total === "SINGLE") {
+      const user = await User.findById(req.body._id);
+      if (!user || user.userType !== req.body.sendTo) {
+        return res.status(404).json({ status: 404, message: "User not found or invalid user type" });
+      }
+
+      const notificationData = await createNotification(user._id);
+
+      return res.status(200).json({ status: 200, message: "Notification sent successfully.", data: notificationData });
+    }
+
+    return res.status(400).json({ status: 400, message: "Invalid 'total' value" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 500, message: "Server error", data: {} });
+  }
+};
+
+exports.getNotificationsForUser = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: 404, message: 'User not found' });
+    }
+
+    const notifications = await Notification.find({
+      $or: [
+        { userId: userId },
+      ]
+    });
+    return res.status(200).json({ status: 200, message: 'Notifications retrieved successfully', data: notifications });
+  } catch (error) {
+    return res.status(500).json({ status: 500, message: 'Error retrieving notifications', error: error.message });
+  }
+};
+
+exports.getAllNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find();
+
+    return res.status(200).json({ status: 200, message: 'Notifications retrieved successfully', data: notifications });
+  } catch (error) {
+    return res.status(500).json({ status: 500, message: 'Error retrieving notifications', error: error.message });
+  }
+};
+
+exports.deleteNotification = async (req, res) => {
+  const notificationId = req.params.id;
+
+  try {
+    const deletedNotification = await Notification.findByIdAndDelete(notificationId);
+
+    if (!deletedNotification) {
+      return res.status(404).json({ status: 404, message: 'Notification not found' });
+    }
+
+    return res.status(200).json({ status: 200, message: 'Notification deleted successfully', data: deletedNotification });
+  } catch (error) {
+    return res.status(500).json({ status: 500, message: 'Error deleting notification', error: error.message });
+  }
+};
+
+schedule.scheduleJob('* * * * *', async () => {
+  try {
+    console.log("Entry");
+    const currentDate = new Date();
+    console.log("Current Date:", currentDate);
+    
+    const overdueItems = await TodoItem.find({ reminderDate: { $lte: currentDate }, completed: false });
+    console.log("Overdue Items:", overdueItems);
+
+    for (const item of overdueItems) {
+      const user = await User.findById(item.userId);
+      
+      if (user) {
+        // Check if a similar notification already exists
+        const existingNotification = await Notification.findOne({
+          userId: user._id,
+          content: `You have an overdue todo item: ${item.title}. Please complete it.`,
+          status: 'unread'
+        });
+
+        if (!existingNotification) {
+          const notification = new Notification({
+            userId: user._id,
+            title: 'TodoReminder',
+            content: `You have an overdue todo item: ${item.title}. Please complete it.`,
+            status: 'unread',
+            createdAt: new Date(),
+          });
+          await notification.save();
+          console.log("Notification saved");
+        } else {
+          console.log("Notification already exists");
+        }
+      } else {
+        console.log("User not found");
+      }
+    }
+  } catch (error) {
+    console.error('Error processing reminders:', error);
+  }
+});
+
+
+
+
+

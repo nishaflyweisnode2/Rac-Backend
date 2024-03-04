@@ -1,22 +1,27 @@
 const mongoose = require('mongoose');
 
-const notificationSchema = mongoose.Schema({
-    message: {
-        type: String, 
-    },
-    image: {
-    type: String,
-    default:
-      "https://static.vecteezy.com/system/resources/thumbnails/008/154/360/small/student-logo-vector.jpg",
+const notificationSchema = new mongoose.Schema({
+  userId:
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
   },
-  title:{
-    type:String,
-    default:""
-  }
- 
-},{timestamps:true})
+  title: {
+    type: String
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['unread', 'read'],
+    default: 'unread',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-
-module.exports = mongoose.model('notify', notificationSchema);
-
-
+module.exports = mongoose.model('Notification', notificationSchema);
