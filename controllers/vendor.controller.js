@@ -5,6 +5,7 @@ var newOTP = require("otp-generators");
 const User = require("../models/user.model")
 const Helper = require("../models/helper")
 const Notification = require('../models/notifcation');
+const IDCard = require('../models/idCardModel');
 
 
 const Order = require("../models/orders/orderModel");
@@ -508,37 +509,55 @@ exports.editvendorProfile = async (req, res) => {
 
 exports.getNotificationsForUser = async (req, res) => {
   try {
-      const userId = req.user._id;
+    const userId = req.user._id;
 
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ status: 404, message: 'User not found' });
-      }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: 404, message: 'User not found' });
+    }
 
-      const notifications = await Notification.find({ userId: userId }).populate('userId');
+    const notifications = await Notification.find({ userId: userId }).populate('userId');
 
-      return res.status(200).json({ status: 200, message: 'Notifications retrieved successfully', data: notifications });
+    return res.status(200).json({ status: 200, message: 'Notifications retrieved successfully', data: notifications });
   } catch (error) {
-      return res.status(500).json({ status: 500, message: 'Error retrieving notifications', error: error.message });
+    return res.status(500).json({ status: 500, message: 'Error retrieving notifications', error: error.message });
   }
 };
 
 exports.markNotificationAsRead = async (req, res) => {
   try {
-      const notificationId = req.params.notificationId;
+    const notificationId = req.params.notificationId;
 
-      const notification = await Notification.findByIdAndUpdate(
-          notificationId,
-          { status: 'read' },
-          { new: true }
-      );
+    const notification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { status: 'read' },
+      { new: true }
+    );
 
-      if (!notification) {
-          return res.status(404).json({ status: 404, message: 'Notification not found' });
-      }
+    if (!notification) {
+      return res.status(404).json({ status: 404, message: 'Notification not found' });
+    }
 
-      return res.status(200).json({ status: 200, message: 'Notification marked as read', data: notification });
+    return res.status(200).json({ status: 200, message: 'Notification marked as read', data: notification });
   } catch (error) {
-      return res.status(500).json({ status: 500, message: 'Error marking notification as read', error: error.message });
+    return res.status(500).json({ status: 500, message: 'Error marking notification as read', error: error.message });
+  }
+};
+
+exports.findIDCardByToken = async (req, res) => {
+  try {
+
+    const partnerId = req.user._id;
+    console.log("partnerid", partnerId);
+    const idCard = await IDCard.findOne({ partnerId });
+
+    if (!idCard) {
+      return res.status(404).json({ message: 'ID card not found for this partner' });
+    }
+
+    res.status(200).json({ message: 'ID card found successfully', data: idCard });
+  } catch (error) {
+    console.error('Error finding ID card by token:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

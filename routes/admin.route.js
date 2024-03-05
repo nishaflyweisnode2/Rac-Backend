@@ -3,6 +3,9 @@ const { authJwt } = require("../middlewares");
 const express = require("express");
 const router = express()
 
+const { IdCard, } = require('../middlewares/imageUpload');
+
+
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
@@ -72,6 +75,22 @@ router.post('/notifications', [authJwt.isAdmin], auth.createNotification);
 router.get('/notifications/user/:userId', [authJwt.isAdmin], auth.getNotificationsForUser);
 router.get('/notifications', [authJwt.isAdmin], auth.getAllNotifications);
 router.delete('/notifications/:id', [authJwt.isAdmin], auth.deleteNotification);
+
+router.post('/permissions', [authJwt.isAdmin], auth.createPermission);
+router.get('/permissions', [authJwt.isAdmin], auth.getAllPermissions);
+router.put('/permissions/:id', [authJwt.isAdmin], auth.updatePermission);
+router.delete('/permissions/:id', [authJwt.isAdmin], auth.deletePermission);
+
+router.post('/roles', [authJwt.isAdmin], auth.createRole);
+router.get('/roles', [authJwt.isAdmin], auth.getAllRoles);
+router.put('/roles/:id', [authJwt.isAdmin], auth.updateRole);
+router.delete('/roles/:id', [authJwt.isAdmin], auth.deleteRole);
+
+router.post('/id-cards', [authJwt.isAdmin], IdCard.single('image'), auth.createIDCard);
+router.get('/id-cards', [authJwt.isAdmin], auth.getAllIDCards);
+router.get('/id-cards/:id', [authJwt.isAdmin], auth.getIDCardById);
+router.put('/id-cards/:id', [authJwt.isAdmin], IdCard.single('image'), auth.updateIDCardById);
+router.delete('/id-cards/:id', [authJwt.isAdmin], auth.deleteIDCardById);
 
 
 module.exports = router;

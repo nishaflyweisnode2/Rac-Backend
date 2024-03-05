@@ -13,10 +13,13 @@ const TodoItem = require('../models/todolistModel');
 const Notification = require('../models/notifcation');
 const nodemailer = require('nodemailer');
 const schedule = require('node-schedule');
+const { Permission, Role } = require('../models/roleModel');
+const IDCard = require('../models/idCardModel');
 
 
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { checkout } = require("../routes/admin.route");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
   cloud_name: "dtijhcmaa",
@@ -31,6 +34,16 @@ const storage = new CloudinaryStorage({
   },
 });
 const upload = multer({ storage: storage });
+
+const reffralCode = async () => {
+  var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let OTP = '';
+  for (let i = 0; i < 5; i++) {
+    OTP += digits[Math.floor(Math.random() * 36)];
+  }
+  return OTP;
+}
+
 exports.registration = async (req, res) => {
   const { phone, email } = req.body;
   try {
@@ -667,13 +680,13 @@ schedule.scheduleJob('* * * * *', async () => {
     console.log("Entry");
     const currentDate = new Date();
     console.log("Current Date:", currentDate);
-    
+
     const overdueItems = await TodoItem.find({ reminderDate: { $lte: currentDate }, completed: false });
     console.log("Overdue Items:", overdueItems);
 
     for (const item of overdueItems) {
       const user = await User.findById(item.userId);
-      
+
       if (user) {
         // Check if a similar notification already exists
         const existingNotification = await Notification.findOne({
@@ -704,7 +717,224 @@ schedule.scheduleJob('* * * * *', async () => {
   }
 });
 
+exports.createPermission = async (req, res) => {
+  try {
+    const { name, description } = req.body;
 
+    const existingPermission = await Permission.findOne({ name });
+    if (existingPermission) {
+      return res.status(400).json({ status: 400, message: 'Permission with this name already exists' });
+    }
+
+    const permission = new Permission({ name, description });
+    await permission.save();
+    res.status(201).json({ message: 'Permission created successfully', data: permission });
+  } catch (error) {
+    console.error('Error creating permission:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.createRole = async (req, res) => {
+  try {
+    const { name, description, permissions, language } = req.body;
+
+    const existingRole = await Role.findOne({ name });
+    if (existingRole) {
+      return res.status(400).json({ status: 400, message: 'Role with this name already exists' });
+    }
+
+    if (permissions) {
+      const CheckPermission = await Permission.findOne({ permissions })
+      if (!CheckPermission) {
+        return res.status(404)({ status: 404, message: 'permission not found' })
+      }
+    }
+    const role = new Role({ name, description, permissions, language });
+    await role.save();
+    res.status(201).json({ message: 'Role created successfully', data: role });
+  } catch (error) {
+    console.error('Error creating role:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getAllPermissions = async (req, res) => {
+  try {
+    const permissions = await Permission.find();
+    res.status(200).json({ data: permissions });
+  } catch (error) {
+    console.error('Error getting permissions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getAllRoles = async (req, res) => {
+  try {
+    const roles = await Role.find().populate('permissions');
+    res.status(200).json({ data: roles });
+  } catch (error) {
+    console.error('Error getting roles:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.updatePermission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+    const updatedPermission = await Permission.findByIdAndUpdate(id, { name, description }, { new: true });
+    if (!updatedPermission) {
+      return res.status(404).json({ message: 'Permission not found' });
+    }
+    res.status(200).json({ message: 'Permission updated successfully', data: updatedPermission });
+  } catch (error) {
+    console.error('Error updating permission:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.deletePermission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedPermission = await Permission.findByIdAndDelete(id);
+    if (!deletedPermission) {
+      return res.status(404).json({ message: 'Permission not found' });
+    }
+    res.status(200).json({ message: 'Permission deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting permission:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.updateRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, permissions, language } = req.body;
+    if (permissions) {
+      const CheckPermission = await Permission.findOne({ permissions })
+      if (!CheckPermission) {
+        return res.status(404)({ status: 404, message: 'permission not found' })
+      }
+    }
+    const updatedRole = await Role.findByIdAndUpdate(id, { name, description, permissions, language }, { new: true });
+    if (!updatedRole) {
+      return res.status(404).json({ message: 'Role not found' });
+    }
+    res.status(200).json({ message: 'Role updated successfully', data: updatedRole });
+  } catch (error) {
+    console.error('Error updating role:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.deleteRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedRole = await Role.findByIdAndDelete(id);
+    if (!deletedRole) {
+      return res.status(404).json({ message: 'Role not found' });
+    }
+    res.status(200).json({ message: 'Role deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting role:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.createIDCard = async (req, res) => {
+  try {
+    const { partnerId, name, designation, idNumber, department, degree, phone, email } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ status: 400, error: "Image file is required" });
+    }
+
+    const existingIDCard = await IDCard.findOne({ idNumber });
+    if (existingIDCard) {
+      return res.status(400).json({ message: 'ID card with this ID number already exists' });
+    }
+
+    const idCard = new IDCard({
+      partnerId,
+      name,
+      designation,
+      idNumber: await reffralCode(),
+      department,
+      degree,
+      phone,
+      email,
+      image: req.file.path,
+    });
+
+    await idCard.save();
+
+    res.status(201).json({ message: 'ID card created successfully', data: idCard });
+  } catch (error) {
+    console.error('Error creating ID card:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getAllIDCards = async (req, res) => {
+  try {
+    const idCards = await IDCard.find();
+    res.status(200).json({ data: idCards });
+  } catch (error) {
+    console.error('Error getting ID cards:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getIDCardById = async (req, res) => {
+  try {
+    const idCard = await IDCard.findById(req.params.id);
+    if (!idCard) {
+      return res.status(404).json({ message: 'ID card not found' });
+    }
+    res.status(200).json({ data: idCard });
+  } catch (error) {
+    console.error('Error getting ID card by ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.updateIDCardById = async (req, res) => {
+  try {
+    const idCardId = req.params.id;
+    const updateFields = { ...req.body };
+
+    if (req.file) {
+      updateFields.image = req.file.path;
+    }
+
+    const updatedIDCard = await IDCard.findByIdAndUpdate(idCardId, updateFields, { new: true });
+
+    if (!updatedIDCard) {
+      return res.status(404).json({ message: 'ID card not found' });
+    }
+
+    res.status(200).json({ message: 'ID card updated successfully', data: updatedIDCard });
+  } catch (error) {
+    console.error('Error updating ID card by ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+exports.deleteIDCardById = async (req, res) => {
+  try {
+    const idCard = await IDCard.findByIdAndDelete(req.params.id);
+    if (!idCard) {
+      return res.status(404).json({ message: 'ID card not found' });
+    }
+    res.status(200).json({ message: 'ID card deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting ID card by ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 
 

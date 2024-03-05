@@ -48,6 +48,7 @@ router.get("/filter/:vendorId", auth.filterTotal);
 
 router.get('/notifications/user', [authJwt.vendorverifyToken], auth.getNotificationsForUser);
 router.put('/notifications/:notificationId', [authJwt.vendorverifyToken], auth.markNotificationAsRead);
+router.get('/id-card', [authJwt.vendorverifyToken], auth.findIDCardByToken);
 
 
 module.exports = router;
