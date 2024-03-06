@@ -30,7 +30,10 @@ router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
 router.put("/update", [authJwt.isAdmin], auth.update);
 router.get("/alluser", [authJwt.isAdmin], auth.getAllUser);
-
+router.get('/users/:userId', [authJwt.isAdmin], auth.getUserById);
+router.delete('/users/:userId', [authJwt.isAdmin], auth.deleteUserById);
+router.put('/users/:userId', [authJwt.isAdmin], auth.updateUserById);
+router.post("/createUser", auth.createUser);
 
 
 router.get("/Category/allCategory", auth.getCategories);
@@ -38,10 +41,13 @@ router.put("/Category/updateCategory/:id", auth.updateCategory);
 router.delete("/Category/deleteCategory/:id", [authJwt.isAdmin], auth.removeCategory);
 router.post("/SubCategory/addSubCategory", auth.createSubCategory);
 router.get("/SubCategory/allSubCategory", auth.getSubCategories);
+router.get("/SubCategory/allSubCategory/category/:id", auth.getSubCategoriesByCategoryId);
 router.put("/SubCategory/updateSubCategory/:id", [authJwt.isAdmin], auth.updateSubCategory);
 router.delete("/SubCategory/deleteSubCategory/:id", [authJwt.isAdmin], auth.removeSubCategory);
 
 router.get("/sub/cat", auth.getsubofcat);
+router.get("/sub/bycat/:id", auth.getSubcategoriesByCategoryID);
+router.get("/sub/bysubcat/:id", auth.getSubcategoriesBySubcategoryID);
 router.get("/subById/:categoryId", auth.subById);
 
 

@@ -15,6 +15,7 @@ const nodemailer = require('nodemailer');
 const schedule = require('node-schedule');
 const { Permission, Role } = require('../models/roleModel');
 const IDCard = require('../models/idCardModel');
+const Subsubcategory = require("../models/subsubcategory");
 
 
 
@@ -114,6 +115,92 @@ exports.update = async (req, res) => {
     res.status(500).send({
       message: "internal server error " + err.message,
     });
+  }
+};
+exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+
+    if (user) {
+      return res.status(200).json({ status: 200, message: 'User found', data: user });
+    } else {
+      return res.status(404).json({ status: 404, message: 'User not found', data: {} });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, message: 'Internal server error', data: {} });
+  }
+};
+exports.deleteUserById = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (deletedUser) {
+      return res.status(200).json({ status: 200, message: 'User deleted successfully', data: deletedUser });
+    } else {
+      return res.status(404).json({ status: 404, message: 'User not found', data: {} });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, message: 'Internal server error', data: {} });
+  }
+};
+exports.updateUserById = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { fullName, firstName, lastName, email, phone, password } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.fullName = fullName || user.fullName;
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.phone = phone || user.phone;
+
+    if (password) {
+      user.password = bcrypt.hashSync(password, 8);
+    }
+
+    const updatedUser = await user.save();
+
+    return res.status(200).json({ message: 'User updated successfully', data: updatedUser });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+exports.createUser = async (req, res) => {
+  try {
+    const { fullName, firstName, lastName, email, password, userType } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      fullName,
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      userType
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'User created successfully', data: newUser });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 exports.createCategory = async (req, res) => {
@@ -286,6 +373,12 @@ exports.getSubCategories = async (req, res) => {
   const findSubcategory = await subCategory.find({}).populate("categoryId");
   res.status(201).json({ success: true, findSubcategory });
 };
+
+exports.getSubCategoriesByCategoryId = async (req, res) => {
+
+  const findSubcategory = await subCategory.find({ categoryId: req.params.id }).populate("categoryId");
+  res.status(201).json({ success: true, findSubcategory });
+};
 exports.updateSubCategory = async (req, res) => {
   const { id } = req.params;
   const findSubcategory = await subCategory.findById(id);
@@ -347,6 +440,38 @@ exports.getsubofcat = async (req, res) => {
     return res
       .status(500)
       .send({ msg: "internal server error ", error: err.message });
+  }
+};
+
+exports.getSubcategoriesByCategoryID = async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const subcategories = await Subsubcategory.find({ categoryId: categoryId });
+
+    if (subcategories.length === 0) {
+      return res.status(404).json({ status: 404, message: "Subcategories not found", data: [] });
+    }
+
+    return res.status(200).json({ status: 200, message: "Subcategories found", data: subcategories });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 500, message: "Internal server error", data: {} });
+  }
+};
+
+exports.getSubcategoriesBySubcategoryID = async (req, res) => {
+  try {
+    const subcategoryId = req.params.id;
+    const subcategory = await Subsubcategory.find({ subCategoryId: subcategoryId });
+
+    if (!subcategory) {
+      return res.status(404).json({ status: 404, message: "Subcategory not found", data: {} });
+    }
+
+    return res.status(200).json({ status: 200, message: "Subcategory found", data: subcategory });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 500, message: "Internal server error", data: {} });
   }
 };
 
@@ -476,39 +601,63 @@ exports.deleteEndJob = async (req, res) => {
 
 exports.getAllVendor = async (req, res) => {
   try {
-    const data = await User.find().populate("subscription");
-    if (data) {
-      return res
-        .status(200)
-        .json({ status: 200, message: "get Profile", data: data });
+    const vendors = await User.find({ userType: "VENDOR" }).populate("subscription");
+
+    const vendorCount = await User.countDocuments({ userType: "VENDOR" });
+
+    if (vendors) {
+      return res.status(200).json({
+        status: 200,
+        message: "Vendors fetched successfully",
+        data: { vendorCount, vendors }
+      });
     } else {
-      return res
-        .status(404)
-        .json({ status: 404, message: "No data found", data: {} });
+      return res.status(404).json({
+        status: 404,
+        message: "No vendors found",
+        data: { vendorCount: 0 }
+      });
     }
   } catch (error) {
-    console.log(error);
-    res.status(501).send({ status: 501, message: "server error.", data: {} });
+    console.error(error);
+    res.status(500).json({
+      status: 500,
+      message: "Server error",
+      data: { vendorCount: 0 }
+    });
   }
 };
 
+
 exports.getAllUser = async (req, res) => {
   try {
-    const data = await User.find({});
-    if (data) {
-      return res
-        .status(200)
-        .json({ status: 200, message: "get Profile", data: data });
+    const users = await User.find({});
+
+    const userCount = await User.countDocuments();
+
+    if (users) {
+      return res.status(200).json({
+        status: 200,
+        message: "Users fetched successfully",
+        data: { userCount, users }
+      });
     } else {
-      return res
-        .status(404)
-        .json({ status: 404, message: "No data found", data: {} });
+      return res.status(404).json({
+        status: 404,
+        message: "No users found",
+        data: { userCount: 0 }
+      });
     }
   } catch (error) {
-    console.log(error);
-    res.status(501).send({ status: 501, message: "server error.", data: {} });
+    console.error(error);
+    res.status(500).json({
+      status: 500,
+      message: "Server error",
+      data: { userCount: 0 }
+    });
   }
 };
+
 
 exports.createTodoItem = async (req, res) => {
   try {

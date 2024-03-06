@@ -73,8 +73,10 @@ exports.createVendorProduct = async (req, res, next) => {
       }
       let images = [];
       //   console.log(req.files);
-      for (let i = 0; i < req.files.length; i++) {
-        images.push(req.files[i] ? req.files[i].path : "");
+      if (req.files) {
+        for (let i = 0; i < req.files.length; i++) {
+          images.push(req.files[i] ? req.files[i].path : "");
+        }
       }
       console.log(req.params.id);
       const data = {
@@ -92,7 +94,7 @@ exports.createVendorProduct = async (req, res, next) => {
         warranty: req.body.warranty,
         replacement: req.body.replacement,
       };
-console.log(data);
+      console.log(data);
       const product = await productModel.create(data);
       return res
         .status(200)

@@ -683,7 +683,7 @@ exports.verifyOtpOfPartner = async (req, res) => {
   }
 };
 
-exports.getAllOrders = async (req, res, next) => {
+exports.getAllOrders1 = async (req, res, next) => {
   try {
     const orders = await userOrder
       .find({ orderStatus: "confirmed" })
@@ -701,6 +701,28 @@ exports.getAllOrders = async (req, res, next) => {
     res.status(501).send({ status: 501, message: "server error.", data: {} });
   }
 };
+
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const orders = await userOrder.find({ orderStatus: "confirmed" }).populate("Orders");
+
+    const orderCount = await userOrder.countDocuments({ orderStatus: "confirmed" });
+
+    if (orders.length === 0) {
+      return res.status(404).json({ status: 404, message: "Orders not found", data: { orderCount: 0 } });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "Orders of user",
+      data: { orderCount, orders }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, message: "Server error", data: { orderCount: 0 } });
+  }
+};
+
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await orderModel
