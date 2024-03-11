@@ -15,6 +15,11 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, authConfig.secret, async (err, decoded) => {
     if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).send({
+          message: "Token expired",
+        });
+      }
       console.log(err);
       return res.status(401).send({
         message: "UnAuthorised !",
@@ -44,6 +49,11 @@ const vendorverifyToken = (req, res, next) => {
 
   jwt.verify(token, authConfig.secret, async (err, decoded) => {
     if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).send({
+          message: "Token expired",
+        });
+      }
       console.log(err);
       return res.status(401).send({
         message: "UnAuthorised !",
@@ -69,36 +79,50 @@ const isAdmin = async (req, res, next) => {
 
   if (!token) {
     return res.status(403).send({
-      message: "no token provided! Access prohibited",
+      message: "No token provided! Access prohibited",
     });
   }
 
-  const decoded = await jwt.verify(token, authConfig.secret);
-  if (!decoded) {
-    return res.status(401).send({
-      message: "UnAuthorised ! Admin role is required! ",
-    });
+  try {
+    const decoded = await jwt.verify(token, authConfig.secret);
+
+    if (!decoded) {
+      return res.status(401).send({
+        message: "Unauthorized! Admin role is required!",
+      });
+    }
+
+    const user = await User.findOne({ _id: decoded.id });
+
+    if (!user) {
+      return res.status(400).send({
+        message: "The admin that this token belongs to does not exist",
+      });
+    }
+
+    const isAdmin = user.userType === "ADMIN";
+
+    if (!isAdmin) {
+      return res.status(403).send({
+        message: "You are not an admin",
+      });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).send({
+        message: "Token expired",
+      });
+    } else {
+      return res.status(401).send({
+        message: "Unauthorized",
+      });
+    }
   }
-
-  const user = await User.findOne({ _id: decoded.id });
-  console.log(user);
-  if (!user) {
-    return res.status(400).send({
-      message: "The admin that this  token belongs to does not exist",
-    });
-  }
-
-  const isAdmin = user.userType === "ADMIN";
-  if (!isAdmin) {
-    return res.status(403).send({
-      message: "You are not Admin",
-    });
-  }
-
-  req.user = user;
-
-  next();
 };
+
 
 module.exports = {
   verifyToken,
