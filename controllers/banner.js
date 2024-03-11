@@ -34,7 +34,7 @@ exports.addBanner = async (req, res) => {
         desc: req.body.desc,
         date: req.body.date,
         status: req.body.status,
-        type:req.body.type
+        type: req.body.type
       });
       //   if(!imagePattern.test(bannerData.image)) {res .status(400).send({msg:"invalid extennsion"})
       // }
@@ -93,7 +93,7 @@ exports.Deletebanner = async (req, res) => {
   }
 };
 
-exports.UpdateBanner = async (req, res) => {
+exports.UpdateBanner1 = async (req, res) => {
   try {
 
     imageUpload.single("uploadBanner")(req, res, async (imageErr) => {
@@ -104,27 +104,59 @@ exports.UpdateBanner = async (req, res) => {
       console.log(imageUrl);
 
       const UpdatedData = await banner
-      .findOneAndUpdate({
-        image: imageUrl || req.body.image,
-        desc: req.body.desc,
-        date: req.body.date,
-        status: req.body.status,
-        type:req.body.type
-      });
+        .findOneAndUpdate({
+          image: imageUrl || req.body.image,
+          desc: req.body.desc,
+          date: req.body.date,
+          status: req.body.status,
+          type: req.body.type
+        });
       //   if(!imagePattern.test(bannerData.image)) {res .status(400).send({msg:"invalid extennsion"})
       // }
       // if (!bannerData.image.match(imagePattern)) {
       //   return res.status(400).send({ msg: "invalid extennsion" });
       // }
-   
-    console.log(UpdatedData);
-    res.status(200).send({ message: "banner Updated  ",data:UpdatedData });
-  })
- } catch (err) {
+
+      console.log(UpdatedData);
+      res.status(200).send({ message: "banner Updated  ", data: UpdatedData });
+    })
+  } catch (err) {
     console.log(err);
     res.status(400).send({ message: err.message });
   }
 };
+
+exports.UpdateBanner = async (req, res) => {
+  try {
+    imageUpload.single("uploadBanner")(req, res, async (imageErr) => {
+      if (imageErr) {
+        return res.status(400).json({ msg: imageErr.message });
+      }
+
+      const imageUrl = req.file ? req.file.path : "";
+      console.log(imageUrl);
+
+      const UpdatedData = await banner.findOneAndUpdate(
+        { _id: req.params.id },
+        {
+          image: imageUrl || req.body.image,
+          desc: req.body.desc,
+          date: req.body.date,
+          status: req.body.status,
+          type: req.body.type
+        },
+        { new: true }
+      );
+
+      console.log(UpdatedData);
+      res.status(200).send({ message: "Banner updated", data: UpdatedData });
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(400).send({ message: err.message });
+  }
+};
+
 exports.getBannersByType = async (req, res) => {
   try {
     const { type } = req.params;
