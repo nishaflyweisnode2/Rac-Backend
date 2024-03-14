@@ -38,4 +38,12 @@ router.get("/near/shop", auth.nearbyShop)
 router.get('/notifications/user', [authJwt.verifyToken], auth.getNotificationsForUser);
 router.put('/notifications/:notificationId', [authJwt.verifyToken], auth.markNotificationAsRead);
 
+
+router.post('/professionals/create', [authJwt.verifyToken], auth.createProfessional);
+router.get('/professionals', auth.getAllProfessionals);
+router.get('/professionals/:id', auth.getProfessionalById);
+router.put('/professionals/:id', [authJwt.verifyToken], auth.updateProfessional);
+router.delete('/professionals/:id', [authJwt.verifyToken], auth.deleteProfessional);
+
+
 module.exports = router;

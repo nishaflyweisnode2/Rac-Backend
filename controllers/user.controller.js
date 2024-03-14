@@ -6,6 +6,7 @@ const path = require("path");
 // const bcrypt = require("bcryptjs");
 const productModel = require("../models/productsModel");
 const Notification = require('../models/notifcation');
+const Professional = require('../models/becomeProfessional');
 
 
 
@@ -91,7 +92,7 @@ exports.loginWithPhone = async (req, res) => {
     };
     res
       .status(200)
-      .send({ status: 200, message: "logged in successfully", data: obj,user });
+      .send({ status: 200, message: "logged in successfully", data: obj, user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -305,37 +306,103 @@ exports.nearbyShop = async (req, res) => {
 
 exports.getNotificationsForUser = async (req, res) => {
   try {
-      const userId = req.user._id;
+    const userId = req.user._id;
 
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ status: 404, message: 'User not found' });
-      }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: 404, message: 'User not found' });
+    }
 
-      const notifications = await Notification.find({ userId: userId }).populate('userId');
+    const notifications = await Notification.find({ userId: userId }).populate('userId');
 
-      return res.status(200).json({ status: 200, message: 'Notifications retrieved successfully', data: notifications });
+    return res.status(200).json({ status: 200, message: 'Notifications retrieved successfully', data: notifications });
   } catch (error) {
-      return res.status(500).json({ status: 500, message: 'Error retrieving notifications', error: error.message });
+    return res.status(500).json({ status: 500, message: 'Error retrieving notifications', error: error.message });
   }
 };
 
 exports.markNotificationAsRead = async (req, res) => {
   try {
-      const notificationId = req.params.notificationId;
+    const notificationId = req.params.notificationId;
 
-      const notification = await Notification.findByIdAndUpdate(
-          notificationId,
-          { status: 'read' },
-          { new: true }
-      );
+    const notification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { status: 'read' },
+      { new: true }
+    );
 
-      if (!notification) {
-          return res.status(404).json({ status: 404, message: 'Notification not found' });
-      }
+    if (!notification) {
+      return res.status(404).json({ status: 404, message: 'Notification not found' });
+    }
 
-      return res.status(200).json({ status: 200, message: 'Notification marked as read', data: notification });
+    return res.status(200).json({ status: 200, message: 'Notification marked as read', data: notification });
   } catch (error) {
-      return res.status(500).json({ status: 500, message: 'Error marking notification as read', error: error.message });
+    return res.status(500).json({ status: 500, message: 'Error marking notification as read', error: error.message });
+  }
+};
+
+
+exports.createProfessional = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    console.log(userId);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: 404, message: 'User not found' });
+    }
+
+    const newProfessional = await Professional.create({ ...req.body, userId: userId });
+    res.status(201).json({ status: 'success', data: newProfessional });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+
+exports.getAllProfessionals = async (req, res) => {
+  try {
+    const professionals = await Professional.find();
+    res.status(200).json({ status: 'success', data: professionals });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
+exports.getProfessionalById = async (req, res) => {
+  try {
+    const professional = await Professional.findById(req.params.id);
+    if (!professional) {
+      return res.status(404).json({ status: 'error', message: 'Professional not found' });
+    }
+    res.status(200).json({ status: 'success', data: professional });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
+exports.updateProfessional = async (req, res) => {
+  try {
+    const updatedProfessional = await Professional.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+    if (!updatedProfessional) {
+      return res.status(404).json({ status: 'error', message: 'Professional not found' });
+    }
+    res.status(200).json({ status: 'success', data: updatedProfessional });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+exports.deleteProfessional = async (req, res) => {
+  try {
+    const professional = await Professional.findByIdAndDelete(req.params.id);
+    if (!professional) {
+      return res.status(404).json({ status: 'error', message: 'Professional not found' });
+    }
+    res.status(204).json({ status: 'success', data: null });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 };
