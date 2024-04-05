@@ -17,6 +17,7 @@ const storage = new CloudinaryStorage({
   },
 });
 const upload = multer({ storage: storage });
+const mongoose = require('mongoose');
 
 exports.createProduct = async (req, res) => {
   // console.log("hi");
@@ -241,7 +242,7 @@ exports.updateProductImages = async (req, res) => {
   }
 };
 
-exports.addProductReview = async (req, res) => {
+exports.addProductReview1 = async (req, res) => {
   try {
     const { userId, rating } = req.body;
     const productId = req.params.id;
@@ -266,7 +267,7 @@ exports.addProductReview = async (req, res) => {
         .json({ error: "User already gave a rating for this product" });
     }
 
-    product.review.push({ userId, rating });
+    product.review.push({ userId, rating, reviews });
 
     let totalRating = 0;
     let avgStarRating = 0;
@@ -304,21 +305,25 @@ exports.addProductReview = async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // Update the review array
-    product.review.push({ userId, rating });
+    // Initialize 'reviews' field as an empty array if needed
+    if (!Array.isArray(product.reviews)) {
+      product.reviews = [];
+    }
 
-    // Calculate the average rating and total rating
-    let Rating = 0;
+    const userIdObject = new mongoose.Types.ObjectId(userId);
+
+    product.reviews.push({ userId: userIdObject, rating });
+
+    let totalRating = 0;
     let avgStarRating = 0;
 
-    product.review.forEach((review) => {
-      Rating += review.rating;
+    product.reviews.forEach((review) => {
+      totalRating += review.rating;
     });
 
-    avgStarRating = Rating / product.review.length;
+    avgStarRating = totalRating / product.reviews.length;
 
-    // Update the product with the new average rating and total rating
-    product.totalRating = product.review.length;
+    product.totalRating = product.reviews.length;
     product.avgStarRating = avgStarRating;
 
     const updatedProduct = await product.save();

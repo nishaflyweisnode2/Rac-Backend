@@ -277,21 +277,28 @@ const productSchema = mongoose.Schema(
     replacement: {
       type: String,
     },
-
-    ratings: {
-      type: String,
-      default:0
-    },
     reviews: {
-      type: String,
-      default:0
+      type: [
+        {
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user", // Reference to the User model
+          },
+          rating: {
+            type: Number,
+            default: 0,
+          },
+        },
+      ],
+      default: [],
     },
-  
+
+
     openingTime: {
       type: String,
       default: "09:00 AM", // Default opening time
     },
-   
+
     location: {
       type: {
         type: String,

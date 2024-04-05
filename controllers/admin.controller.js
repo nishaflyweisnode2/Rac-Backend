@@ -327,7 +327,7 @@ exports.createSubCategory = async (req, res) => {
     // if (!findCategory) {
     //     return res.status(404).json({ message: "Category not found.", status: 404, data: {} });
     // }
-
+console.log("1111");
     upload.single("image")(req, res, async (err) => {
       try {
         if (err) {
@@ -339,6 +339,9 @@ exports.createSubCategory = async (req, res) => {
           name: req.body.name,
           image: fileUrl,
           categoryId: req.body.categoryId,
+          subCategoryId: req.body.subCategoryId,
+          vendorId: req.body.vendorId,
+          status: req.body.status,
         };
         const subcategory = await subCategory.create(data);
 
