@@ -10,6 +10,8 @@ router.post(
   /*verifyToken,*/ auth.placeOrder
 );
 router.post("/emptyCart/:id", auth.emptyCart);
+router.delete('/product/:productId', [authJwt.verifyToken], auth.removeProductFromCart);
+
 router.get("/api/v1/order/allOrders", auth.getAllOrders);
 router.get("/api/v1/order/Orders", [authJwt.verifyToken], auth.getOrders);
 router.get(

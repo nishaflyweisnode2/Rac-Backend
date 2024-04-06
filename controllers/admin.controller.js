@@ -327,7 +327,7 @@ exports.createSubCategory = async (req, res) => {
     // if (!findCategory) {
     //     return res.status(404).json({ message: "Category not found.", status: 404, data: {} });
     // }
-console.log("1111");
+    console.log("1111");
     upload.single("image")(req, res, async (err) => {
       try {
         if (err) {
@@ -834,7 +834,7 @@ schedule.scheduleJob('* * * * *', async () => {
     console.log("Current Date:", currentDate);
 
     const overdueItems = await TodoItem.find({ reminderDate: { $lte: currentDate }, completed: false });
-    console.log("Overdue Items:", overdueItems);
+    // console.log("Overdue Items:", overdueItems);
 
     for (const item of overdueItems) {
       const user = await User.findById(item.userId);

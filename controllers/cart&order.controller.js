@@ -239,6 +239,48 @@ exports.emptyCart = async (req, res) => {
   }
 };
 
+exports.removeProductFromCart = async (req, res) => {
+  try {
+    const userData = await User.findOne({ _id: req.user.id });
+    if (!userData) {
+      return res.status(404).json({ status: 404, message: "User not found" });
+    } else {
+      let findCart = await Cart.findOne({ userId: userData._id });
+      if (!findCart) {
+        return res.status(404).json({ status: 404, message: "Cart not found" });
+      }
+
+      const productIdToRemove = req.params.productId;
+
+      const existingProductIndex = findCart.product.findIndex(
+        (product) => product.productId.toString() === productIdToRemove
+      );
+
+      if (existingProductIndex === -1) {
+        return res.status(404).json({
+          status: 404,
+          message: "Product not found in the cart",
+        });
+      }
+
+      findCart.product.splice(existingProductIndex, 1);
+
+      findCart.totalItemProduct = findCart.product.length;
+
+      await findCart.save();
+
+      return res.status(200).json({
+        status: 200,
+        message: "Product removed from the cart successfully.",
+        data: findCart,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, message: "Server error" });
+  }
+};
+
 exports.getCart = async (req, res) => {
 
   try {
