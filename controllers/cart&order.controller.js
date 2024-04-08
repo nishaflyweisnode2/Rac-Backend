@@ -27,6 +27,7 @@ const orderModel = require("../models/orders/orderModel");
 const userOrder = require("../models/orders/userOrder");
 const cancelReturnOrder = require("../models/orders/cancelReturnOrder");
 const EndJob = require('../models/orders/endJobModel');
+const Subsubcategory = require("../models/subsubcategory");
 
 
 // const cartModel = require("../models/cart.model");
@@ -73,7 +74,8 @@ exports.addToCart = async (req, res) => {
       }
 
       if (req.body.type === "service" && findCart.product.length === 0) {
-        const findService = await seviceNameModel.findById(req.body.Id);
+        // const findService = await seviceNameModel.findById(req.body.Id);
+        const findService = await Subsubcategory.findById(req.body.Id);
         if (!findService) {
           return res
             .status(404)
